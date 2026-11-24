@@ -4,7 +4,7 @@ int main()
 {
     ON_LOG(STARTLOG())
     SetTraceLogLevel(LOG_NONE);
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Akinator");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Utkanator");
     SetTargetFPS(60);
 
     InitAudioDevice();
@@ -78,7 +78,7 @@ void StartAkinatorGraphicGame()
         BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawAkinatorBackground();
-        DrawSignature("Akinator");
+        DrawSignature("Utkanator");
 
         switch (current_screen)
         {

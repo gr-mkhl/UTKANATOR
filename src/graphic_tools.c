@@ -65,7 +65,7 @@ void DrawSignature( const char* project_name )
 
 void DrawTextBeautiful(const char* text, int top_y, int text_font, Color color) //TODO - сделать по красоте
 {
-    while (MeasureText(text, text_font) > 0.8 * SCREEN_WIDTH )
+    while (MeasureText(text, text_font) > 0.9 * SCREEN_WIDTH )
         text_font -= 2;
     DrawText(text, (SCREEN_WIDTH - MeasureText(text, text_font)) / 2, top_y, text_font, color);
 }
