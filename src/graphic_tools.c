@@ -20,7 +20,7 @@ void DrawButtons( button_t* buttons, size_t size, Color color )
 
 void DrawInputBar( int top_y, int text_font, char* output_string, int* output_str_len )
 {
-    Rectangle text_box = {0.1 * SCREEN_WIDTH, (float)top_y, 0.68 * SCREEN_WIDTH, (float)(text_font + 10)};
+    Rectangle text_box = {0.1 * SW, (float)top_y, 0.68 * SW, (float)(text_font + 10)};
 
 
     int key = GetCharPressed();
@@ -65,12 +65,12 @@ void DrawSignature( const char* project_name )
 
 void DrawTextBeautiful(const char* text, int top_y, int text_font, Color color) //TODO - сделать по красоте
 {
-    while (MeasureText(text, text_font) > 0.9 * SCREEN_WIDTH )
+    while (MeasureText(text, text_font) > 0.9 * SW )
         text_font -= 2;
-    DrawText(text, (SCREEN_WIDTH - MeasureText(text, text_font)) / 2, top_y, text_font, color);
+    DrawText(text, (SW - MeasureText(text, text_font)) / 2, top_y, text_font, color);
 }
 
-int CheckButtonsStatus( button_t* buttons, size_t size )
+int CheckButtonsStatus( button_t* buttons, size_t size, Sound click_sound )
 {
     for (size_t i = 0; i < size; i++)
     {

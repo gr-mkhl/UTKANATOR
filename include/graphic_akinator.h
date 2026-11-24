@@ -1,4 +1,4 @@
-#ifndef _AKINATOR_GRAPHIC_H_
+ #ifndef _AKINATOR_GRAPHIC_H_
 #define _AKINATOR_GRAPHIC_H_
 
 #include <raylib.h>
@@ -6,8 +6,8 @@
 #include <log.h>
 #include <graphic_tools.h>
 
-#define SCREEN_WIDTH  800
-#define SCREEN_HEIGHT 600
+#define SW  800
+#define SH 600
 #define YES_NO_FONT_SIZE 60
 #define MENU_BUTTONS_FONT_SIZE 40
 #define AKINATOR_BUTTONS_FONT_SIZE 40
@@ -24,16 +24,6 @@ char error_buffer[100] = {};
 
 stack_t path_stack1 = {};
 stack_t path_stack2 = {};
-
-Texture2D not_found_duck;
-Texture2D thinking_duck;
-Texture2D prime_duck;
-Texture2D sad_duck;
-Texture2D forest;
-
-Sound loose_sound;
-Sound win_sound;
-Sound click_sound;
 
 enum menu_buttons
 {
@@ -90,24 +80,71 @@ enum screen_status
     SCREEN_ERROR = 9
 };
 
+struct game_context_t
+{
+    leaf_t* root;
+    leaf_t* current;
+
+    button_t* MenuButtons;
+    size_t num_MenuButtons;
+
+    button_t* AkinatorScreenButtons;
+    size_t num_AkinatorScreenButtons;
+
+    button_t* SLScreenButtons;
+    size_t num_SLScreenButtons;
+
+    button_t* DCScreenButtons;
+    size_t num_DCScreenButtons;
+
+    button_t* back_to_menu_button;
+
+    texture_t* AkinatorTextures;
+    size_t num_AkinatorTextures;
+
+    sound_t* AkinatorSounds;
+    size_t num_AkinatorSounds;
+
+    screen_status current_screen;
+    akinator_screens_t akinator_screen;
+
+};
 
 void StartAkinatorGraphicGame();
+void AkinatorGameLoop( game_context_t* AkinatorContext );
 
-void InitAkinatorTexturesAndSounds();
-void UninitAkinatorTexturesAndSounds();
+void InitTexturesArray( texture_t* textures_arr, size_t array_len );
+void InitSoundsArray  ( sound_t* sounds_arr, size_t array_len );
+
+void UninitTexturesArray( texture_t* textures_arr, size_t array_len );
+void UninitSoundsArray( sound_t* sounds_arr, size_t array_len );
 
 void InitPathStacksForDefAndCompModes();
 void UninitPathStacksForDefAndCompModes();
 
-void DrawAkinatorBackground();
+void DrawAkinatorBackground( texture_t background );
 
-int  DrawDCScreen( screen_status current_screen, button_t* buttons, size_t size );
-int  DrawSLScreen( screen_status current_screen, button_t* buttons, size_t size );
-int  DrawAkinatorGameScreen( akinator_screens_t akinator_screen, leaf_t* current, button_t* buttons, size_t size );
+int  DrawDCScreen( screen_status current_screen, button_t* buttons, size_t size, Sound click_sound );
+int  DrawSLScreen( screen_status current_screen, button_t* buttons, size_t size, Sound click_sound );
+int  DrawAkinatorGameScreen( akinator_screens_t akinator_screen, leaf_t* current,
+                            button_t* buttons, size_t size, texture_t* textures, Sound click_sound );
 void AkinatorSetButtonsVisibility( akinator_screens_t akinator_screen, button_t* buttons );
-void AkinatorScreenNextButtonPushed( screen_status* current_screen, akinator_screens_t* akinator_screen, leaf_t** root, leaf_t **current );
-int  DrawMenuScreen( button_t* buttons, size_t size );
+void AkinatorScreenNextButtonPushed( screen_status* current_screen,
+                            akinator_screens_t* akinator_screen, leaf_t** root, leaf_t **current );
+int  DrawMenuScreen( button_t* buttons, size_t size, texture_t* textures, Sound click_sound );
 void SLSetButtonsVisibility( screen_status current_screen, button_t* buttons );
 
 void ReverseStack( stack_t* stack );
+
+int MenuScreenVisual( game_context_t* AkinatorContext );
+void SaveModeScreen( game_context_t* AkinatorContext );
+void LoadModeScreen( game_context_t* AkinatorContext );
+void ErrorScreen( game_context_t* AkinatorContext );
+void AkinatorScreen( game_context_t* AkinatorContext );
+void ScreenCompareModeAddingFirstCharacter( game_context_t* AkinatorContext );
+void ScreenCompareModeAddingSecondCharacter( game_context_t* AkinatorContext );
+void ScreenCompareModeOutputResult( game_context_t* AkinatorContext );
+void ScreenDefModeOutputResult( game_context_t* AkinatorContext );
+void ScreenDefModeInputCharacter( game_context_t* AkinatorContext );
+
 #endif
