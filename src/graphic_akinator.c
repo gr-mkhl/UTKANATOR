@@ -73,7 +73,6 @@ void StartAkinatorGraphicGame()
     akinator_screens_t akinator_screen = FIRST_SCREEN;
 
 
-
     while (!WindowShouldClose())
     {
         BeginDrawing();

@@ -20,7 +20,7 @@ char name1[100] = {};
 char name2[100] = {};
 
 char buffer[256] = {};
-char error_buffer[50] = {};
+char error_buffer[100] = {};
 
 stack_t path_stack1 = {};
 stack_t path_stack2 = {};
