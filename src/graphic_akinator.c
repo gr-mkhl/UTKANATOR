@@ -444,6 +444,7 @@ void StartAkinatorGraphicGame()
             }
 
             case SCREEN_AKINATOR:
+            {
                 if (akinator_screen == LAST_QUESTION_SCREEN_NO1 || akinator_screen == LAST_QUESTION_SCREEN_NO2 || akinator_screen == LAST_QUESTION_SCREEN_YES)
                     ;
                 else if (root == NULL)
@@ -466,7 +467,7 @@ void StartAkinatorGraphicGame()
                         {
                             akinator_screen = LAST_QUESTION_SCREEN_YES;
                             PlaySound(win_sound);
-                            AkinatorScreenButtons[NEXT] = {"NEXT", {SCREEN_WIDTH * 0.35, SCREEN_HEIGHT * 0.6, SCREEN_WIDTH * 0.30, 60}, AKINATOR_BUTTONS_FONT_SIZE, {0xD8, 0xCD, 0xAD, 255}};
+                            AkinatorScreenButtons[NEXT] = {"NEXT", {SCREEN_WIDTH * 0.35, SCREEN_HEIGHT * 0.6, SCREEN_WIDTH * 0.30, 60}, AKINATOR_BUTTONS_FONT_SIZE, {0xF8, 0xED, 0xAD, 255}, {0xD8, 0xCD, 0xAD, 255}};
                             SetButtonsTextPosition(AkinatorScreenButtons, ARRAY_SIZE(AkinatorScreenButtons));
                         }
                         else
@@ -485,6 +486,7 @@ void StartAkinatorGraphicGame()
                         break;
                 }
                 break;
+            }
             case SCREEN_ERROR:
             {
                 int status = CheckButtonsStatus(&back_button, 1);
@@ -725,7 +727,7 @@ void InitAkinatorTexturesAndSounds()
     sad_duck       = LoadTexture("style/sad_duck.png");
     forest         = LoadTexture("style/forest.png");
     loose_sound    = LoadSound("style/loose_sound.mp3");
-    click_sound          = LoadSound("style/clickclick.mp3");
+    click_sound    = LoadSound("style/clickclick.mp3");
     win_sound      = LoadSound("style/win_sound.mp3");
 }
 

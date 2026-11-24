@@ -1,4 +1,4 @@
-#include <akinator.h>
+#include <console_akinator.h>
 
 char buffer[256] = {};
 
