@@ -18,6 +18,6 @@ g++ -D LOGGING \
 -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,\
 integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr \
 -I include \
-src/akinator.c src/tree.c src/log.c -o build/akinator.out
+src/console_akinator.c src/tree.c src/log.c -o build/console_akinator_game.out
 
-./build/akinator.out
+./build/console_akinator_game.out

@@ -18,7 +18,7 @@ g++ -D LOGGING \
 -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,\
 integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr \
 -I include \
-src/akinator_graphic.c src/tree.c src/log.c src/stack.c -o build/akinator_graphic.out \
+src/graphic_akinator.c src/graphic_tools.c src/tree.c src/log.c src/stack.c -o build/akinator_graphic_game.out \
 -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -lasound
 
-./build/akinator_graphic.out
+./build/akinator_graphic_game.out

@@ -1,9 +1,7 @@
-#ifndef _AKINATOR_H_
-#define _AKINATOR_H_
+#ifndef _CONSOLE_AKINATOR_H_
+#define _CONSOLE_AKINATOR_H_
 
 #include <stdio.h>
-//#include <raylib.h>
-
 #include <tree.h>
 #include <log.h>
 
@@ -14,6 +12,7 @@ void StartGuessingCharacter ( leaf_t** root );
 void StartNewAkinatorSession( leaf_t** root );
 void GuessingFinal          ( leaf_t*  current );
 void AddNewCharacter        ( leaf_t*  current );
+
 #define MENU "menu:\n"                      \
                 "l - load database\n"       \
                 "s - save database\n"       \
