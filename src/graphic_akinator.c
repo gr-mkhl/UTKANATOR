@@ -9,8 +9,6 @@ int main()
 
     InitAudioDevice();
 
-    InitPathStacksForDefAndCompModes();
-
     StartAkinatorGraphicGame();
 
     CloseAudioDevice();
@@ -24,6 +22,11 @@ int main()
 
 void StartAkinatorGraphicGame()
 {
+
+    stack_t path_stack1 = {};
+    stack_t path_stack2 = {};
+
+
     button_t MenuButtons[] =
     {
         [QUIT] = {"QUIT", {SW * 0.7, SH * 0.75, SW * 0.15, 60},
@@ -67,7 +70,7 @@ void StartAkinatorGraphicGame()
         [thinking_duck]     = {{}, "style/thinking_duck.png"},
         [prime_duck]        = {{}, "style/prime_duck_no_bg.png"},
         [sad_duck]          = {{}, "style/sad_duck.png"},
-        [forest_background] = {{}, "style/forest.png"},
+        [forest_background] = {{}, "style/forest.png"}
     };
 
     sound_t AkinatorSounds[] =
@@ -89,7 +92,7 @@ void StartAkinatorGraphicGame()
 
     game_context_t AkinatorContext =
     {
-        .root   = NULL,
+        .root = NULL,
         .current = NULL,
         .MenuButtons = MenuButtons,
         .num_MenuButtons = ARRAY_SIZE(MenuButtons),
@@ -105,37 +108,43 @@ void StartAkinatorGraphicGame()
         .AkinatorSounds = AkinatorSounds,
         .num_AkinatorSounds = ARRAY_SIZE(AkinatorSounds),
         .current_screen = SCREEN_MENU,
-        .akinator_screen = FIRST_SCREEN
+        .akinator_screen = FIRST_SCREEN,
+        .path_stack1 = &path_stack1,
+        .path_stack2 = &path_stack2
     };
 
-    InitTexturesArray(AkinatorContext.AkinatorTextures,
-                      AkinatorContext.num_AkinatorTextures);
-    InitSoundsArray(AkinatorContext.AkinatorSounds,
-                    AkinatorContext.num_AkinatorSounds);
-    SetButtonsTextPosition(AkinatorContext.back_to_menu_button, 1);
-    SetButtonsTextPosition(AkinatorContext.MenuButtons,
-                           AkinatorContext.num_MenuButtons);
-    SetButtonsTextPosition(AkinatorContext.AkinatorScreenButtons,
-                           AkinatorContext.num_AkinatorScreenButtons);
-    SetButtonsTextPosition(AkinatorContext.SLScreenButtons,
-                           AkinatorContext.num_SLScreenButtons);
-    SetButtonsTextPosition(AkinatorContext.DCScreenButtons,
-                           AkinatorContext.num_DCScreenButtons);
+    InitAkinatorContext(&AkinatorContext);
 
-
-
+    InitPathStacksForDefAndCompModes(AkinatorContext.path_stack1, AkinatorContext.path_stack2);
 
     AkinatorGameLoop(&AkinatorContext);
-
-
 
 
     if (AkinatorContext.root != NULL)
         DeleteLeaf(AkinatorContext.root);
 
-    return;
+    UninitPathStacksForDefAndCompModes(AkinatorContext.path_stack1, AkinatorContext.path_stack2);
 
+    return;
 }
+
+void InitAkinatorContext( game_context_t* AkinatorContext )
+{
+    InitTexturesArray(AkinatorContext->AkinatorTextures,
+                      AkinatorContext->num_AkinatorTextures);
+    InitSoundsArray(AkinatorContext->AkinatorSounds,
+                    AkinatorContext->num_AkinatorSounds);
+    SetButtonsTextPosition(AkinatorContext->back_to_menu_button, 1);
+    SetButtonsTextPosition(AkinatorContext->MenuButtons,
+                           AkinatorContext->num_MenuButtons);
+    SetButtonsTextPosition(AkinatorContext->AkinatorScreenButtons,
+                           AkinatorContext->num_AkinatorScreenButtons);
+    SetButtonsTextPosition(AkinatorContext->SLScreenButtons,
+                           AkinatorContext->num_SLScreenButtons);
+    SetButtonsTextPosition(AkinatorContext->DCScreenButtons,
+                           AkinatorContext->num_DCScreenButtons);
+}
+
 
 void AkinatorGameLoop( game_context_t* AkinatorContext )
 {
@@ -232,54 +241,50 @@ int MenuScreenVisual( game_context_t* AkinatorContext )
 void SaveModeScreen( game_context_t* AkinatorContext )
 {
     int button_status = DrawSLScreen(AkinatorContext->current_screen, AkinatorContext->SLScreenButtons,
-                                        AkinatorContext->num_SLScreenButtons,  AkinatorContext->AkinatorSounds[click_sound].sound);
+                                     AkinatorContext->num_SLScreenButtons,  AkinatorContext->AkinatorSounds[click_sound].sound,
+                                     AkinatorContext->string, &AkinatorContext->letters);
 
     if (button_status == SAVE_BUTTON)
     {
-        strcpy(buffer, "databases/");
-        strcat(buffer, string);
+        sprintf(buffer, "databases/%s", AkinatorContext->string);
+
         if (SaveTree(AkinatorContext->root, buffer) == 0)
         {
             strcpy(error_buffer, "Empty database, nothing to save");
             AkinatorContext->current_screen = SCREEN_ERROR;
-            memset(string, 0, 100);
-            letters = 0;
+            CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
             return;
         }
 
         AkinatorContext->current_screen = SCREEN_MENU;
         ON_LOG(LOG("Saved database to: %s", buffer))
         ON_LOG(GraphDumpTree(AkinatorContext->root);)
-
-        memset(string, 0, 100);
-        letters = 0;
     }
     else if (button_status == BACK_BUTTON)
         AkinatorContext->current_screen = SCREEN_MENU;
     else
         return;
 
-    memset(string, 0, 100);
-    letters = 0;
+    CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
 }
 
 void LoadModeScreen( game_context_t* AkinatorContext )
 {
     int button_status = DrawSLScreen(AkinatorContext->current_screen, AkinatorContext->SLScreenButtons,
-                        AkinatorContext->num_SLScreenButtons, AkinatorContext->AkinatorSounds[click_sound].sound);
+                                     AkinatorContext->num_SLScreenButtons, AkinatorContext->AkinatorSounds[click_sound].sound,
+                                     AkinatorContext->string, &AkinatorContext->letters);
     if (button_status == LOAD_BUTTON)
     {
         if (AkinatorContext->root != NULL)
             DeleteLeaf(AkinatorContext->root);
-        strcpy(buffer, "databases/");
-        strcat(buffer, string);
+
+        sprintf(buffer, "databases/%s", AkinatorContext->string);
         AkinatorContext->root = LoadTree(buffer);
         if (AkinatorContext->root == NULL)
         {
             strcpy(error_buffer, "No such database");
             AkinatorContext->current_screen = SCREEN_ERROR;
-            memset(string, 0, 100);
-            letters = 0;
+            CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
             return;
         }
         if (FullBinaryTreeVerifier(AkinatorContext->root) == -1)
@@ -288,8 +293,7 @@ void LoadModeScreen( game_context_t* AkinatorContext )
             AkinatorContext->current_screen = SCREEN_ERROR;
             ON_LOG(LOG("Database is corrupted. This is not full binary tree."))
             ON_LOG(GraphDumpTree(AkinatorContext->root);)
-            memset(string, 0, 100);
-            letters = 0;
+            CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
             return;
         }
 
@@ -303,28 +307,28 @@ void LoadModeScreen( game_context_t* AkinatorContext )
     else
         return;
 
-    memset(string, 0, 100);
-    letters = 0;
+    CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
 }
 
 void ScreenDefModeInputCharacter( game_context_t* AkinatorContext )
 {
-    int button_status = DrawDCScreen(AkinatorContext->current_screen, AkinatorContext->DCScreenButtons, AkinatorContext->num_DCScreenButtons, AkinatorContext->AkinatorSounds[click_sound].sound);
+    int button_status = DrawDCScreen(AkinatorContext->current_screen, AkinatorContext->DCScreenButtons,
+                                     AkinatorContext->num_DCScreenButtons,
+                                     AkinatorContext->AkinatorSounds[click_sound].sound,
+                                     AkinatorContext->string, &AkinatorContext->letters);
     if (button_status == DC_BACK)
     {
         AkinatorContext->current_screen = SCREEN_MENU;
-        memset(string, 0, 100);
-        letters = 0;
+        CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
         return;
     }
     else if (button_status == DC_NEXT)
     {
-        strcpy(name1, string);
-        memset(string, 0, 100);
-        letters = 0;
+        strcpy(name1, AkinatorContext->string);
+        CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
 
-        StackDtor(&path_stack1);
-        StackInit(&path_stack1, 10);
+        StackDtor(AkinatorContext->path_stack1);
+        StackInit(AkinatorContext->path_stack1, 10);
 
         if (AkinatorContext->root == NULL)
         {
@@ -332,13 +336,13 @@ void ScreenDefModeInputCharacter( game_context_t* AkinatorContext )
             AkinatorContext->current_screen = SCREEN_ERROR;
             return;
         }
-        else if (FindNameInATree(AkinatorContext->root, name1, &path_stack1) == NULL)
+        else if (FindNameInATree(AkinatorContext->root, name1, AkinatorContext->path_stack1) == NULL)
         {
             strcpy(error_buffer, "No such element in a base");
             AkinatorContext->current_screen = SCREEN_ERROR;
             return;
         }
-        ReverseStack(&path_stack1);
+        ReverseStack(AkinatorContext->path_stack1);
 
         AkinatorContext->current_screen = SCREEN_DEFINITION_OUTPUT;
     }
@@ -357,7 +361,7 @@ void ScreenDefModeOutputResult( game_context_t* AkinatorContext )
     stack_t copy_stack = {};
     leaf_t* current_def = AkinatorContext->root;
 
-    StackInitByCopy(&path_stack1, &copy_stack);
+    StackInitByCopy(AkinatorContext->path_stack1, &copy_stack);
     char temp_def_buffer[100] = {};
     int num_of_characteristics = (int)copy_stack.size;
 
@@ -390,9 +394,11 @@ void ScreenDefModeOutputResult( game_context_t* AkinatorContext )
 
 void ScreenCompareModeOutputResult( game_context_t* AkinatorContext )
 {
-    int status = CheckButtonsStatus(AkinatorContext->back_to_menu_button, 1, AkinatorContext->AkinatorSounds[click_sound].sound);
+    int status = CheckButtonsStatus(AkinatorContext->back_to_menu_button,
+                                    1, AkinatorContext->AkinatorSounds[click_sound].sound);
     if (status == 0)
         AkinatorContext->current_screen = SCREEN_MENU;
+
     DrawButtons(AkinatorContext->back_to_menu_button, 1, {0xED, 0x7C, 0x30, 255});
 
     leaf_t* current_def_same = AkinatorContext->root;
@@ -402,12 +408,14 @@ void ScreenCompareModeOutputResult( game_context_t* AkinatorContext )
     stack_t copy_stack1 = {};
     stack_t copy_stack2 = {};
 
-    StackInitByCopy(&path_stack1, &copy_stack1);
-    StackInitByCopy(&path_stack2, &copy_stack2);
+    StackInitByCopy(AkinatorContext->path_stack1, &copy_stack1);
+    StackInitByCopy(AkinatorContext->path_stack2, &copy_stack2);
 
     int num_of_characts1 = (int)copy_stack1.size;
     int num_of_characts2 = (int)copy_stack2.size;
+
     int min_num = (num_of_characts1 > num_of_characts2 ? num_of_characts2 : num_of_characts1);
+
     sprintf(buffer, "%s and %s both:", name1, name2);
     DrawTextBeautiful(buffer, 0.05 * SH, 40, {0xED, 0x7C, 0x30, 255});
 
@@ -447,6 +455,7 @@ void ScreenCompareModeOutputResult( game_context_t* AkinatorContext )
     current_def1 = current_def_same;
     current_def2 = current_def_same;
 
+
     if (strcmp(name1, name2) != 0)
     {
         sprintf(buffer, "but %s is: ", name1);
@@ -458,13 +467,13 @@ void ScreenCompareModeOutputResult( game_context_t* AkinatorContext )
             if (value1 == 0)
             {
                 sprintf(buffer, "- not %s", current_def1->data);
-                DrawText(buffer, 0, (int) (SH * 0.2 + (j + 1) * 45), 40, RED);
+                DrawText(buffer, 0.05 * SW, (int) (SH * 0.2 + (j + 1) * 45), 40, RED);
                 current_def1 = current_def1->right;
             }
             else if (value1 == 1)
             {
                 sprintf(buffer, "- %s", current_def1->data);
-                DrawText(buffer, 0, (int) (SH * 0.2 + (j + 1) * 45), 40, GREEN);
+                DrawText(buffer, 0.05 * SW, (int) (SH * 0.2 + (j + 1) * 45), 40, GREEN);
                 current_def1 = current_def1->left;
             }
             StackPop(&copy_stack1, &value1);
@@ -474,13 +483,13 @@ void ScreenCompareModeOutputResult( game_context_t* AkinatorContext )
             if (value2 == 0)
             {
                 sprintf(buffer, "- not %s", current_def2->data);
-                DrawText(buffer, SW / 2, (int) (SH * 0.2 + (j + 1) * 45), 40, RED);
+                DrawText(buffer, (int) (SW * 0.55), (int) (SH * 0.2 + (j + 1) * 45), 40, RED);
                 current_def2 = current_def2->right;
             }
             else if (value2 == 1)
             {
                 sprintf(buffer, "- %s", current_def2->data);
-                DrawText(buffer, SW / 2, (int) (SH * 0.2 + (j + 1) * 45), 40, GREEN);
+                DrawText(buffer, (int) (SW * 0.55), (int) (SH * 0.2 + (j + 1) * 45), 40, GREEN);
                 current_def2 = current_def2->left;
             }
             StackPop(&copy_stack2, &value2);
@@ -494,23 +503,23 @@ void ScreenCompareModeOutputResult( game_context_t* AkinatorContext )
 void ScreenCompareModeAddingFirstCharacter( game_context_t* AkinatorContext )
 {
     int button_status = DrawDCScreen(AkinatorContext->current_screen, AkinatorContext->DCScreenButtons,
-                        AkinatorContext->num_DCScreenButtons, AkinatorContext->AkinatorSounds[click_sound].sound);
+                                     AkinatorContext->num_DCScreenButtons,
+                                     AkinatorContext->AkinatorSounds[click_sound].sound,
+                                     AkinatorContext->string, &AkinatorContext->letters);
     if (button_status == DC_BACK)
     {
         AkinatorContext->current_screen = SCREEN_MENU;
-        memset(string, 0, 100);
-        letters = 0;
+        CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
         return;
     }
     else if (button_status == DC_NEXT)
     {
-        strcpy(name1, string);
+        strcpy(name1, AkinatorContext->string);
 
-        memset(string, 0, 100);
-        letters = 0;
+        CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
 
-        StackDtor(&path_stack1);
-        StackInit(&path_stack1, 10);
+        StackDtor(AkinatorContext->path_stack1);
+        StackInit(AkinatorContext->path_stack1, 10);
 
         if (AkinatorContext->root == NULL)
         {
@@ -518,57 +527,19 @@ void ScreenCompareModeAddingFirstCharacter( game_context_t* AkinatorContext )
             AkinatorContext->current_screen = SCREEN_ERROR;
             return;
         }
-        else if (FindNameInATree(AkinatorContext->root, name1, &path_stack1) == NULL)
+        else if (FindNameInATree(AkinatorContext->root, name1, AkinatorContext->path_stack1) == NULL)
         {
             strcpy(error_buffer, "No such element in a base");
             AkinatorContext->current_screen = SCREEN_ERROR;
             return;
         }
-        ReverseStack(&path_stack1);
+        ReverseStack(AkinatorContext->path_stack1);
 
         AkinatorContext->current_screen = SCREEN_COMPARISON_INPUT_SECOND;
     }
 }
 
-void ScreenCompareModeAddingSecondCharacter( game_context_t* AkinatorContext )
-{
-    int button_status = DrawDCScreen(AkinatorContext->current_screen, AkinatorContext->DCScreenButtons,
-                                        AkinatorContext->num_DCScreenButtons,
-                                        AkinatorContext->AkinatorSounds[click_sound].sound);
-    if (button_status == DC_BACK)
-    {
-        AkinatorContext->current_screen = SCREEN_MENU;
-        memset(string, 0, 100);
-        letters = 0;
-        return;
-    }
-    else if (button_status == DC_NEXT)
-    {
-        strcpy(name2, string);
 
-        memset(string, 0, 100);
-        letters = 0;
-
-        StackDtor(&path_stack2);
-        StackInit(&path_stack2, 10);
-
-        if (AkinatorContext->root == NULL)
-        {
-            strcpy(error_buffer, "Empty database");
-            AkinatorContext->current_screen = SCREEN_ERROR;
-            return;
-        }
-        else if (FindNameInATree(AkinatorContext->root, name2, &path_stack2) == NULL)
-        {
-            strcpy(error_buffer, "No such element in a base");
-            AkinatorContext->current_screen = SCREEN_ERROR;
-            return;
-        }
-        ReverseStack(&path_stack2);
-
-        AkinatorContext->current_screen = SCREEN_COMPARISON_OUTPUT;
-    }
-}
 
 void AkinatorScreen( game_context_t* AkinatorContext )
 {
@@ -585,11 +556,13 @@ void AkinatorScreen( game_context_t* AkinatorContext )
 
     switch (DrawAkinatorGameScreen(AkinatorContext->akinator_screen, AkinatorContext->current,
                 AkinatorContext->AkinatorScreenButtons, AkinatorContext->num_AkinatorScreenButtons,
-                AkinatorContext->AkinatorTextures, AkinatorContext->AkinatorSounds[click_sound].sound))
+                AkinatorContext->AkinatorTextures, AkinatorContext->AkinatorSounds[click_sound].sound,
+                AkinatorContext->string, &AkinatorContext->letters))
     {
         case NEXT:
             AkinatorScreenNextButtonPushed(&AkinatorContext->current_screen, &AkinatorContext->akinator_screen,
-                                            &AkinatorContext->root, &AkinatorContext->current);
+                                           &AkinatorContext->root, &AkinatorContext->current,
+                                            AkinatorContext->string, &AkinatorContext->letters);
             break;
         case YES:
             if (AkinatorContext->akinator_screen == LAST_QUESTION_SCREEN)
@@ -646,9 +619,8 @@ void ReverseStack( stack_t* stack )
 
 }
 
-void AkinatorScreenNextButtonPushed( screen_status* current_screen,
-                                     akinator_screens_t* akinator_screen,
-                                     leaf_t** root, leaf_t **current )
+void AkinatorScreenNextButtonPushed( screen_status* current_screen, akinator_screens_t* akinator_screen,
+                                     leaf_t** root, leaf_t **current, char* string, int* letters )
 {
     switch (*akinator_screen)
     {
@@ -657,8 +629,7 @@ void AkinatorScreenNextButtonPushed( screen_status* current_screen,
             *current = *root;
             ON_LOG(LOG("Added first element: %s", string))
             ON_LOG(GraphDumpTree(*root);)
-            memset(string, 0, 100);
-            letters = 0;
+            CleanInputBarBuffer(string, letters);
             break;
         case LAST_QUESTION_SCREEN_YES:
             *current_screen = SCREEN_MENU;
@@ -670,8 +641,7 @@ void AkinatorScreenNextButtonPushed( screen_status* current_screen,
         case LAST_QUESTION_SCREEN_NO1:
             (*current)->right = InitLeaf((*current)->data);
             (*current)->left = InitLeaf(string);
-            memset(string, 0, 100);
-            letters = 0;
+
             *akinator_screen = LAST_QUESTION_SCREEN_NO2;
             break;
         case LAST_QUESTION_SCREEN_NO2:
@@ -679,8 +649,9 @@ void AkinatorScreenNextButtonPushed( screen_status* current_screen,
             ON_LOG(LOG("Akinator added new : %s. He is different from %s, because he is %s",
                         (*current)->left->data, (*current)->right->data, (*current)->data))
             ON_LOG(GraphDumpTree(*root);)
-            memset(string, 0, 100);
-            letters = 0;
+
+            CleanInputBarBuffer(string, letters);
+
             *current_screen = SCREEN_MENU;
             *akinator_screen = ADD_FIRST_ELEMENT;
             *current = *root;
@@ -688,14 +659,15 @@ void AkinatorScreenNextButtonPushed( screen_status* current_screen,
         default:
             break;
     }
-};
+}
 
-void DrawAkinatorBackground(texture_t background)
+void DrawAkinatorBackground( texture_t background )
 {
     DrawTexturePro(background.texture, {1000, 0, 4000, 1979}, {0, 0, SW, SH}, {0, 0}, 0.0, RAYWHITE);
 }
 
-int DrawDCScreen( screen_status current_screen, button_t* buttons, size_t size, Sound click_sound )
+int DrawDCScreen( screen_status current_screen, button_t* buttons, size_t size, Sound click_sound,
+                  char* string, int* letters )
 {
     int status = CheckButtonsStatus(buttons, size, click_sound);
     if (status != -1)
@@ -704,7 +676,7 @@ int DrawDCScreen( screen_status current_screen, button_t* buttons, size_t size, 
     if (current_screen == SCREEN_DEFINITION_INPUT)
     {
         DrawTextBeautiful("Whose definition do you want to see?", SH * 0.4, 40, {0xED, 0x7C, 0x30, 255});
-        DrawInputBar(SH * 0.6, 50, string, &letters);
+        DrawInputBar(SH * 0.6, 50, string, letters);
 
     }
     else if (current_screen == SCREEN_DEFINITION_OUTPUT)
@@ -714,20 +686,21 @@ int DrawDCScreen( screen_status current_screen, button_t* buttons, size_t size, 
     {
         DrawTextBeautiful("Which characters do you want to compare?", SH * 0.4, 40, {0xED, 0x7C, 0x30, 255});
         DrawTextBeautiful("First character:", SH * 0.5, 40, {0xED, 0x7C, 0x30, 255});
-        DrawInputBar(SH * 0.6, 50, string, &letters);
+        DrawInputBar(SH * 0.6, 50, string, letters);
 
     }
     else if (current_screen == SCREEN_COMPARISON_INPUT_SECOND)
     {
         DrawTextBeautiful("Second character:", SH * 0.5, 40, {0xED, 0x7C, 0x30, 255});
-        DrawInputBar(SH * 0.6, 50, string, &letters);
+        DrawInputBar(SH * 0.6, 50, string, letters);
     }
 
     DrawButtons(buttons, size, {0xED, 0x7C, 0x30, 255});
     return -1;
 }
 
-int DrawSLScreen( screen_status current_screen, button_t* buttons, size_t size, Sound click_sound )
+int DrawSLScreen( screen_status current_screen, button_t* buttons, size_t size,
+                  Sound click_sound, char* string, int* letters )
 {
     SLSetButtonsVisibility(current_screen, buttons);
 
@@ -741,7 +714,7 @@ int DrawSLScreen( screen_status current_screen, button_t* buttons, size_t size, 
         DrawTextBeautiful("Add filename to load database", SH * 0.3, 40, {0xED, 0x7C, 0x30, 255});
     else if (current_screen == SCREEN_SAVE)
         DrawTextBeautiful("Add filename to save database", SH * 0.3, 40, {0xED, 0x7C, 0x30, 255});
-    DrawInputBar(SH * 0.4, 40, string, &letters);
+    DrawInputBar(SH * 0.4, 40, string, letters);
 
     return -1;
 }
@@ -762,7 +735,7 @@ void SLSetButtonsVisibility( screen_status current_screen, button_t* buttons )
 
 int DrawAkinatorGameScreen( akinator_screens_t akinator_screen, leaf_t* current,
                             button_t* buttons, size_t size, texture_t* textures,
-                            Sound click_sound )
+                            Sound click_sound, char* string, int* letters )
 {
     AkinatorSetButtonsVisibility(akinator_screen, buttons);
     DrawButtons(buttons, size, {0xED, 0x7C, 0x30, 255});
@@ -777,7 +750,7 @@ int DrawAkinatorGameScreen( akinator_screens_t akinator_screen, leaf_t* current,
     if (akinator_screen == ADD_FIRST_ELEMENT)
     {
         DrawTextBeautiful("Add first character: ", SH * 0.4, text_font, {0xED, 0x7C, 0x30, 255});
-        DrawInputBar(SH * 0.6, text_font, string, &letters);
+        DrawInputBar(SH * 0.6, text_font, string, letters);
         DrawTexturePro(textures[prime_duck].texture, {0, 0, 3548, 3688}, {0.7 * SW, 0, 0.3 * SW, 0.3 * SW},
                         {0, 0}, 0.0, RAYWHITE);
     }
@@ -807,7 +780,7 @@ int DrawAkinatorGameScreen( akinator_screens_t akinator_screen, leaf_t* current,
     {
         DrawTextBeautiful("HMMM, I don't know him/her", SH * 0.4, text_font, {0xED, 0x7C, 0x30, 255});
         DrawTextBeautiful("What is his/her name?", SH * 0.5, text_font, {0xED, 0x7C, 0x30, 255});
-        DrawInputBar(SH * 0.6, text_font, string, &letters);
+        DrawInputBar(SH * 0.6, text_font, string, letters);
         DrawTexturePro(textures[not_found_duck].texture, {0, 0, 1079, 1079}, {0.7 * SW, 0, 0.3 * SW, 0.3 * SH},
                         {0, 0}, 0.0, RAYWHITE);
 
@@ -817,7 +790,7 @@ int DrawAkinatorGameScreen( akinator_screens_t akinator_screen, leaf_t* current,
         sprintf(buffer, "How is %s different from %s? He/she is ...",
                 current->left->data, current->right->data);
         DrawTextBeautiful(buffer, SH * 0.4, text_font, {0xED, 0x7C, 0x30, 255});
-        DrawInputBar(SH * 0.6, text_font, string, &letters);
+        DrawInputBar(SH * 0.6, text_font, string, letters);
         DrawTexturePro(textures[not_found_duck].texture, {0, 0, 1079, 1079}, {0.7 * SW, 0, 0.3 * SW, 0.3 * SH},
                         {0, 0}, 0.0, RAYWHITE);
     }
@@ -825,6 +798,44 @@ int DrawAkinatorGameScreen( akinator_screens_t akinator_screen, leaf_t* current,
     return -1;
 }
 
+void ScreenCompareModeAddingSecondCharacter( game_context_t* AkinatorContext )
+{
+    int button_status = DrawDCScreen(AkinatorContext->current_screen, AkinatorContext->DCScreenButtons,
+                                     AkinatorContext->num_DCScreenButtons,
+                                     AkinatorContext->AkinatorSounds[click_sound].sound,
+                                     AkinatorContext->string, &AkinatorContext->letters);
+    if (button_status == DC_BACK)
+    {
+        AkinatorContext->current_screen = SCREEN_MENU;
+        CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
+        return;
+    }
+    else if (button_status == DC_NEXT)
+    {
+        strcpy(name2, AkinatorContext->string);
+
+        CleanInputBarBuffer(AkinatorContext->string, &AkinatorContext->letters);
+
+        StackDtor(AkinatorContext->path_stack2);
+        StackInit(AkinatorContext->path_stack2, 10);
+
+        if (AkinatorContext->root == NULL)
+        {
+            strcpy(error_buffer, "Empty database");
+            AkinatorContext->current_screen = SCREEN_ERROR;
+            return;
+        }
+        else if (FindNameInATree(AkinatorContext->root, name2, AkinatorContext->path_stack2) == NULL)
+        {
+            strcpy(error_buffer, "No such element in a base");
+            AkinatorContext->current_screen = SCREEN_ERROR;
+            return;
+        }
+        ReverseStack(AkinatorContext->path_stack2);
+
+        AkinatorContext->current_screen = SCREEN_COMPARISON_OUTPUT;
+    }
+}
 
 int DrawMenuScreen( button_t* buttons, size_t size, texture_t* textures, Sound click_sound )
 {
@@ -882,15 +893,15 @@ void UninitSoundsArray( sound_t* sounds_arr, size_t array_len )
         UnloadSound(sounds_arr[i].sound);
 }
 
-void InitPathStacksForDefAndCompModes()
+void InitPathStacksForDefAndCompModes( stack_t* path_stack1, stack_t* path_stack2 )
 {
-    StackInit(&path_stack1, 10);
-    StackInit(&path_stack2, 10);
+    StackInit(path_stack1, 10);
+    StackInit(path_stack2, 10);
 }
 
-void UninitPathStacksForDefAndCompModes()
+void UninitPathStacksForDefAndCompModes( stack_t* path_stack1, stack_t* path_stack2 )
 {
-    StackDtor(&path_stack1);
-    StackDtor(&path_stack2);
-
+    StackDtor(path_stack1);
+    StackDtor(path_stack2);
 }
+

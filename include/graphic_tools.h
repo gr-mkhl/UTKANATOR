@@ -57,6 +57,7 @@ enum sound_id
 };
 
 position_t ButtonTextPosition( Rectangle button, const char* text, int font );
+void       CleanInputBarBuffer( char* string, int* letters );
 void       DrawButtons( button_t* buttons, size_t size, Color color );
 void       DrawInputBar( int top_y, int text_font, char* output_string, int* output_str_len );
 void       DrawSignature( const char* project_name );

@@ -13,17 +13,6 @@
 #define AKINATOR_BUTTONS_FONT_SIZE 40
 #define ARRAY_SIZE(array) ((sizeof(array)) / (sizeof(array[0])))
 
-int letters = 0;
-char string[100] = {};
-
-char name1[100] = {};
-char name2[100] = {};
-
-char buffer[256] = {};
-char error_buffer[100] = {};
-
-stack_t path_stack1 = {};
-stack_t path_stack2 = {};
 
 enum menu_buttons
 {
@@ -64,7 +53,7 @@ enum akinator_screens_t
     LAST_QUESTION_SCREEN_YES = 4,
     LAST_QUESTION_SCREEN_NO1 = 5,
     LAST_QUESTION_SCREEN_NO2 = 6,
-};
+};                                                                                                                                                                                                                                    char name1[100] = {}; char name2[100] = {};
 
 enum screen_status
 {
@@ -78,7 +67,7 @@ enum screen_status
     SCREEN_COMPARISON_INPUT_SECOND = 7,
     SCREEN_COMPARISON_OUTPUT = 8,
     SCREEN_ERROR = 9
-};
+};                                                                                                                                                                                                                                   char buffer[256] = {}; char error_buffer[100] = {};
 
 struct game_context_t
 {
@@ -108,8 +97,14 @@ struct game_context_t
     screen_status current_screen;
     akinator_screens_t akinator_screen;
 
+    stack_t* path_stack1;
+    stack_t* path_stack2;
+
+    char string[100];
+    int letters;
 };
 
+void InitAkinatorContext( game_context_t* AkinatorContext );
 void StartAkinatorGraphicGame();
 void AkinatorGameLoop( game_context_t* AkinatorContext );
 
@@ -119,24 +114,27 @@ void InitSoundsArray  ( sound_t* sounds_arr, size_t array_len );
 void UninitTexturesArray( texture_t* textures_arr, size_t array_len );
 void UninitSoundsArray( sound_t* sounds_arr, size_t array_len );
 
-void InitPathStacksForDefAndCompModes();
-void UninitPathStacksForDefAndCompModes();
+void InitPathStacksForDefAndCompModes( stack_t* path_stack1, stack_t* path_stack2 );
+void UninitPathStacksForDefAndCompModes( stack_t* path_stack1, stack_t* path_stack2 );
 
 void DrawAkinatorBackground( texture_t background );
 
-int  DrawDCScreen( screen_status current_screen, button_t* buttons, size_t size, Sound click_sound );
-int  DrawSLScreen( screen_status current_screen, button_t* buttons, size_t size, Sound click_sound );
+int  DrawDCScreen( screen_status current_screen, button_t* buttons,
+                   size_t size, Sound click_sound, char* string, int* letters );
+int  DrawSLScreen( screen_status current_screen, button_t* buttons,
+                   size_t size, Sound click_sound, char* string, int* letters );
 int  DrawAkinatorGameScreen( akinator_screens_t akinator_screen, leaf_t* current,
-                            button_t* buttons, size_t size, texture_t* textures, Sound click_sound );
+                            button_t* buttons, size_t size, texture_t* textures,
+                            Sound click_sound, char* string, int* letters );
 void AkinatorSetButtonsVisibility( akinator_screens_t akinator_screen, button_t* buttons );
-void AkinatorScreenNextButtonPushed( screen_status* current_screen,
-                            akinator_screens_t* akinator_screen, leaf_t** root, leaf_t **current );
+void AkinatorScreenNextButtonPushed( screen_status* current_screen, akinator_screens_t* akinator_screen,
+                                    leaf_t** root, leaf_t **current, char* string, int* letters );
 int  DrawMenuScreen( button_t* buttons, size_t size, texture_t* textures, Sound click_sound );
 void SLSetButtonsVisibility( screen_status current_screen, button_t* buttons );
 
 void ReverseStack( stack_t* stack );
 
-int MenuScreenVisual( game_context_t* AkinatorContext );
+int  MenuScreenVisual( game_context_t* AkinatorContext );
 void SaveModeScreen( game_context_t* AkinatorContext );
 void LoadModeScreen( game_context_t* AkinatorContext );
 void ErrorScreen( game_context_t* AkinatorContext );

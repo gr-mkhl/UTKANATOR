@@ -57,6 +57,12 @@ void DrawInputBar( int top_y, int text_font, char* output_string, int* output_st
         DrawText("type here:", (int)text_box.x + 5, (int)text_box.y + 5, text_font - 5, {0xD8, 0xCD, 0x8D, 255});
 }
 
+void CleanInputBarBuffer( char* string, int* letters )
+{
+    memset(string, 0, 100);
+    *letters = 0;
+}
+
 void DrawSignature( const char* project_name )
 {
     DrawText(project_name, 10, 10, 20, GRAY);
