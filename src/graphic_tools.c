@@ -99,7 +99,7 @@ int CheckButtonsStatus( button_t* buttons, size_t size, Sound click_sound )
     return -1;
 }
 
-void SetButtonsTextPosition(button_t* buttons, size_t size)
+void SetButtonsTextPosition( button_t* buttons, size_t size )
 {
     for (size_t i = 0; i < size; i++)
     {
